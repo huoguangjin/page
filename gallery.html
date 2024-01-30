@@ -1,0 +1,161 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, minimum-scale=0.1">
+    <title></title>
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+    <style type="text/css">
+        * {
+            margin: 0;
+        }
+
+        #main {
+            /* width: 100%;
+            height: 100%; */
+            background-size: 100% auto;
+            background-repeat: repeat-y;
+            background-position-x: center;
+            background-position-y: 0;
+            animation: loopAnim 10s linear infinite;
+            user-select: none;
+        }
+
+        @keyframes loopAnim {
+            from {
+                background-position-y: 0;
+            }
+
+            to {
+                background-position-y: calc(100% - 100vh);
+            }
+        }
+
+        #gallery {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+        }
+
+        #gallery img {
+            width: 100%;
+        }
+
+        #add {
+            width: 4vmin;
+            height: 4vmin;
+            position: absolute;
+            bottom: 4vmin;
+            right: 4vmin;
+            background-color: red;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 4vmin;
+            line-height: 4vmin;
+            user-select: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main">
+        <form onsubmit="onSubmit(event)">
+            <input id="image-selector" type="file" multiple="multiple" accept="image/*" onchange="onImageSelect(event)">
+            <input id="cmd" onchange="onImageSelect(event)">
+            <button type="button" title="1" onclick="onSubmit(event)">run</button>
+        </form>
+        <p id="result"></p>
+        <p id="result-json"></p>
+    </div>
+
+    <div id="gallery">
+    </div>
+
+    <div id="add" type="button">+</div>
+
+<script>
+        function onSubmit(e) {
+            let el = document.getElementById('cmd');
+            let code = el.value;
+            let r;
+            try {
+                r = eval(code);
+            } catch (error) {
+                r = error;
+            }
+
+            let result = document.getElementById('result');
+            result.textContent = result;
+            let resultJson = document.getElementById('result-json');
+            resultJson.textContent = JSON.stringify(result);
+        }
+        let gallery = document.getElementById('gallery');
+
+        function loadImageFile(path) {
+            return new Promise((resolve, reject) => {
+                let reader = new FileReader();
+                reader.onload = () => {
+                    resolve(reader.result);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(path);
+            });
+        }
+
+        function showImages(files) {
+            files.forEach(file => {
+                let image = document.createElement('img');
+                image.setAttribute('data-fancybox', 'gallery');
+                image.setAttribute('data-caption', file.name);
+                gallery.append(image);
+
+                loadImageFile(file).then(data => {
+                    image.src = data;
+                });
+            });
+        }
+
+        let main = document.getElementById('main');
+        main.addEventListener('mousedown', e => {
+            main.style.animationPlayState = 'paused';
+        });
+        main.addEventListener('mouseup', e => {
+            main.style.animationPlayState = 'running';
+        });
+        main.addEventListener('touchstart', e => {
+            main.style.animationPlayState = 'paused';
+        });
+        main.addEventListener('touchend', e => {
+            main.style.animationPlayState = 'running';
+        });
+        main.addEventListener('dblclick', e => {
+            document.getElementById('image-selector').click();
+        });
+
+        document.querySelector('#add').addEventListener('click', e => {
+            document.getElementById('image-selector').click();
+        });
+
+        function onImageSelect(e) {
+            let files = [...e.target.files];
+            if (files.length > 1) {
+                showImages(files);
+                e.target.value = null;
+                return;
+            }
+
+            loadImageFile(files[0]).then(data => {
+                main.style.backgroundImage = `url(${data})`;
+            });
+
+            e.target.remove();
+        }
+
+        Fancybox.bind("[data-fancybox]", {
+            // Your custom options
+        });
+    </script>
+</body>
+
+</html>
